@@ -9,6 +9,7 @@ import (
 )
 
 type words struct {
+	sync.Mutex
 	found map[string]int
 }
 
@@ -17,6 +18,8 @@ func newWords() *words {
 }
 
 func (w *words) add(word string, tally int) {
+	w.Lock()
+	defer w.Unlock()
 	count, ok := w.found[word]
 	if !ok {
 		w.found[word] = tally
@@ -55,10 +58,12 @@ func main() {
 		}(filename)
 	}
 	wait_group.Wait()
-	fmt.Println("Here are the words appearing more than once:\n")
+	fmt.Println("Here are the words appearing more than once:")
+	words.Lock()
 	for word, count := range words.found {
 		if count > 1 {
 			fmt.Printf("%s: %d\n", word, count)
 		}
 	}
+	words.Unlock()
 }
